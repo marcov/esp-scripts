@@ -15,9 +15,7 @@ CREDENTIALS = {
 
 if os.path.isfile(CREDENTIALS["dst"]):
     sys.stdout.write("WARN: credentials file {} already exits.".format(CREDENTIALS["dst"]))
-    sys.exit(0)
-
-retcode = subprocess.call(["cp", CREDENTIALS["src"], CREDENTIALS["dst"]])
-
-if retcode != 0:
-    sys.exit(retcode) 
+else:
+    retcode = subprocess.call(["cp", CREDENTIALS["src"], CREDENTIALS["dst"]])
+    if retcode != 0:
+        sys.exit(retcode) 
