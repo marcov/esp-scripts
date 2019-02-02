@@ -1,51 +1,54 @@
 #!/usr/bin/env bash
 
-echo ""
+set -euo pipefail
 
-if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
-    echo "Usage: basename $0 env [ipaddress]"
-    exit -1
+declare -r htmlFormFieldName="update"
+env="d1mini"
+
+if [ "$#" -lt "1" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+	cat << EOF
+Usage: $(basename $0) ESP-HOST [ENV]
+
+ESP-HOST IP/hostname of the ESP
+ENV      name of the board specified as "env=" in platform.ini. Defaults to "${env}"
+EOF
+	exit -1
 fi
 
+espHost="$1"
+updateUrl="${espHost}/update"
 
-
-if [ $# -lt 1 ]; then
-    env="d1mini"
-else
-    env="$1"
-fi 
-
-if [ $# -lt 2 ]; then
-    ipaddress="cancel.lan"
-    confirm=true
-else
-    ipaddress="$2"
-    confirm=false
-fi
-
-
-echo "Using env=$env and ipaddress=$ipaddress"
-
-if $confirm; then
-    echo -n "Enter to confirm, everything else to abort: "
-    read readVal
-    if [ "$readVal" != "" ]; then
-        echo "Aborted, exiting"
-        exit -1
-    fi
-fi
-
-echo ""
-
-updateUrl="${ipaddress}/update"
+shift
+[ "$#" -ge "1" ] && env="$1"
 binaryPath=.pioenvs/${env}/firmware.bin
-htmlFormFieldName="update"
+
+if ! [ -f "$binaryPath" ]; then
+	echo "ERR: firmware file $binaryPath does not exist"
+	exit -1
+fi
+
+cat <<EOF
+OTA update with the following config:
+	IP   $espHost
+	ENV  $env
+
+EOF
+
+echo -n "Confirm [y/N]: "
+read readVal
+if [ "$readVal" != "y" ]; then
+	echo "Aborted, exiting"
+	exit -1
+fi
+
+echo ""
+
 
 otaCmd=(curl \
      -F "${htmlFormFieldName}=@${binaryPath}" \
-     ${updateUrl})
+     "${updateUrl}")
 
 echo "Executing ${otaCmd[@]} ..."
 
 ${otaCmd[@]}
-
+exit $?
