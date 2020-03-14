@@ -3,21 +3,21 @@
 set -euo pipefail
 
 declare -r htmlFormFieldName="update"
-declare boardName="d1mini"
+declare fwPath=".pio/build/d1mini/firmware.bin"
 declare confirm="1"
 declare -r myName="$(basename $0)"
 
 usage() {
 	cat << EOF
 Usage:
-$myName [OPTIONS] ESP-HOST [ENV]
+$myName [OPTIONS] ESP_HOST FW_PATH
 
 OPTIONS  -h show this help and exit
          -n do not ask for confirmation before flash
 
-ESP-HOST IP/hostname of the ESP
+ESP_HOST IP/hostname of the ESP
 
-ENV      name of the board specified as "env=" in platform.ini. Defaults to "${boardName}"
+FW_PATH      Path to firmware.bin. Defaults to "${fwPath}"
 
 EOF
 	exit -1
@@ -45,19 +45,17 @@ done
 [ -z "${espHost:-}" ] && { echo -e "ERROR: no ESP-HOST SPECIFIED\n"; usage; }
 updateUrl="${espHost}/update"
 shift
-[ "$#" -ge "1" ] && boardName="$1"
+[ "$#" -ge "1" ] && fwPath="$1"
 
-binaryPath=.pioenvs/${boardName}/firmware.bin
-
-if ! [ -f "$binaryPath" ]; then
-	echo "ERR: firmware file $binaryPath does not exist"
+if ! [ -f "$fwPath" ]; then
+	echo "ERR: firmware file $fwPath does not exist"
 	exit -1
 fi
 
 cat <<EOF
 OTA update with the following config:
 	IP     $espHost
-	BOARD  $boardName
+	FW     $fwPath
 
 EOF
 
@@ -74,7 +72,7 @@ echo ""
 
 
 otaCmd=(curl \
-     -F "${htmlFormFieldName}=@${binaryPath}" \
+     -F "${htmlFormFieldName}=@${fwPath}" \
      "${updateUrl}")
 
 echo "Executing ${otaCmd[@]} ..."
