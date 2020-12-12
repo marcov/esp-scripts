@@ -10,9 +10,14 @@ OTA_CMD   := ./esp-scripts/sh/otaupdate.sh
 FIRMWARE  := .pio/build/$(ENV)/firmware.bin
 PIO_OPTS :=
 VERBOSE :=
+SERIAL_PORT :=
 
-VENV_ACTIVATE := ~/.platformio/penv/bin/activate
-PIO_TOOL := . $(VENV_ACTIVATE); pio
+ifneq (,$(SERIAL_PORT))
+
+    UPLOAD_OPTS := \
+      --upload-port $(SERIAL_PORT) \
+
+endif
 
 ifneq (,$(VERBOSE))
 
@@ -39,7 +44,7 @@ C_CXX_SRCS   := $(foreach dir,$(VPATH),$(foreach ext,$(C_CXX_SOURCES_EXT),$(wild
 all: $(FIRMWARE)
 
 $(FIRMWARE): $(C_CXX_SRCS)
-	$(PIO_TOOL) run $(PIO_OPTS) -e $(ENV)
+	pio run $(PIO_OPTS) -e $(ENV)
 
 .PHONY: flash-esptool
 flash-esptool: $(FIRMWARE)
@@ -47,15 +52,15 @@ flash-esptool: $(FIRMWARE)
 
 .PHONY: flash-pio
 flash-pio: $(FIRMWARE)
-	$(PIO_TOOL) run $(PIO_OPTS) --target upload --environment $(ENV)
+	pio run $(PIO_OPTS) --target upload --environment $(ENV) $(UPLOAD_OPTS)
 
 .PHONY: clean
 clean:
-	$(PIO_TOOL) run $(PIO_OPTS) --target clean --environment $(ENV)
+	pio run $(PIO_OPTS) --target clean --environment $(ENV)
 
 .PHONY: logs
 logs: # Print serial logs
-	$(PIO_TOOL) device monitor --environment $(ENV)
+	pio device monitor --environment $(ENV) --port $(SERIAL_PORT)
 
 .PHONY: ota
 ota: $(FIRMWARE)
