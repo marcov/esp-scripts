@@ -28,6 +28,7 @@ endif
 
 C_CXX_SOURCES_EXT := \
   c \
+  cc \
   cpp  \
   h  \
   hpp
